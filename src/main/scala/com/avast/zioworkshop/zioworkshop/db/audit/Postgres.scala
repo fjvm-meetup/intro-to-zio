@@ -44,5 +44,5 @@ class Postgres(connUri: String, user: String, password: String) extends AutoClos
 
 object Postgres {
   def create(): Postgres =
-    new Postgres("jdbc:postgresql://127.0.0.1:5432/proxydb", "proxy", "password")
+    new Postgres("jdbc:postgresql://127.0.0.1:5445/proxydb", "proxy", "password")
 }
