@@ -201,9 +201,32 @@ ZIO[Any, Throwable, O]
 
 ---
 
-### Basic Task API
+# Quick intro to ZIO envi*R*onment
+
+- value that is passed through computation
+- can be accessed at any point
+- must be provided at some point before running the computation
+- intended for DI, but useful for other stuff
+- `Any` => computation doesn't require anything to run
+- `.provide(a: A)` moves `ZIO[A, _, _]` to `ZIO[Any, _, _]`
 
 ---
+
+# ZIO DI Example
+
+```scala
+val printTime: ZIO[Console with Clock, Throwable, Unit] = ???
+
+import com.avast.zioworkshop.zioworkshop.utils.Common
+// ^--- object Common extends Console with Clock with ...
+
+val printTime2: Task[Unit] = printTime.provide(Common)
+```
+
+
+---
+
+### Basic Task API
 
 | Future | Task |
 | ------ | ---- |
@@ -239,6 +262,14 @@ def strLen(str: String): Task[Int] =
 
 Shared mutable reference.
 
+[.code-highlight: all]
+
+[.code-highlight: 2]
+[.code-highlight: 3]
+[.code-highlight: 4]
+
+[.code-highlight: all]
+
 ``` scala
 for {
     ref   <- Ref.make(10)
@@ -261,30 +292,6 @@ for {
     _      <- fiber1.join
     _      <- fiber2.join
 } yield ()
-```
-
----
-
-# Quick intro to ZIO envi*R*onment
-
-- value that is passed through computation
-- can be accessed at any point
-- must be provided at some point before running the computation
-- intended for DI, but useful for other stuff
-- `Any` => computation doesn't require anything to run
-- `.provide(a: A)` moves `ZIO[A, _, _]` to `ZIO[Any, _, _]`
-
----
-
-# ZIO DI Example
-
-```scala
-val printTime: ZIO[Console with Clock, Throwable, Unit] = ???
-
-import com.avast.zioworkshop.zioworkshop.utils.Common
-// ^--- object Common extends Console with Clock with ...
-
-val printTime2: Task[Unit] = printTime.provide(Common)
 ```
 
 ---
