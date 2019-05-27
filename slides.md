@@ -1,3 +1,6 @@
+build-lists: true
+theme: Next, 1
+
 # Taming side-effects with ZIO
 
 ---
@@ -18,6 +21,7 @@
 ^ pushing FP in Avast forward
 ^ Honza ZIO contributor
 
+[.build-lists: false]
 ---
 
 # Why are we here
@@ -41,23 +45,37 @@ Proxy, it does throttling, caching, timeouts etc ... runs on http4s but abstract
 
 ---
 
-# Quick intro to ZIO
+# Introduction
 
 --- 
 
 ## What is ZIO
-Library for:
+Library for programs that are:
 
 - fast
 - asynchronous
 - pure
-- effect 
 
-programming
+---
+
+## What is ZIO
+Library for programs that are:
+
+- fast
+- asynchronous
+- pure
+
+<br/>
 
 > (TLDR: better, lazy `Future[A]`)
 
+[.build-lists: false]
+
 --- 
+
+## Why `lazy` is important
+
+---
 
 ## What is an effect?
 
@@ -69,6 +87,11 @@ In Functional Programming:
 
 ## Example
 
+[.code-highlight: none]
+[.code-highlight: 1]
+[.code-highlight: 3-5]
+[.code-highlight: 1-9]
+[.code-highlight: 11]
 
 ``` scala
 def strLen(str: String): Int = { println(str); str.length }
@@ -81,6 +104,7 @@ res0: Int = 6
 // val result = 6
 // val result = strLen("hi mom")
 
+// this is called referential transparency (but who cares)
 ```
 
 ---
@@ -101,22 +125,23 @@ res0: Int = 6
 
 - your programs should not do effects directly
 - they should describe which effects should happen and how
-- and then you let something else make it happen
+- then you let the interpreter to execute the description later
+
+<br/>
+
+- sometimes called *Effect system*
+- `ZIO` is Effect System, `Future` is async result of running computation
 
 ---
 
-# Quick intro to ZIO
+## Additional ZIO features
 
----
-
-## ZIO features
-
+- Error management
+- Streaming
+- Resource handling
+- Dependency injection
 - Concurrency primitives (Semaphore, Ref ...)
 - Blocking API interoperability
-- Resource handling
-- Error management
-- Dependency injection
-- Streaming
 - STM (Software transactional memory)
 - ...
 
@@ -148,18 +173,30 @@ trait ZIO[R, E, O]
 ---
 
 ## Less generic ZIO datatypes
+[.code-highlight: none]
+[.code-highlight: 1]
+[.code-highlight: 3]
+[.code-highlight: 5]
+[.code-highlight: 3]
 
-- `type IO[E, O] = ZIO[Any, E, O]`
-- `type UIO[O] = ZIO[Any, Nothing, O]`
-- `type Task[O] = ZIO[Any, Throwable, O]`
+```scala
 
+type IO[E, O] = ZIO[Any, E, O]
+
+type Task[O] = ZIO[Any, Throwable, O]
+
+type UIO[O] = ZIO[Any, Nothing, O]
+```
 ---
 
 ## ZIO Task
-- `ZIO[Any, Throwable, O]`
-- lazy `Future[O]`
+```scala
+ZIO[Any, Throwable, O]
+```
+
+- like lazy `Future[O]`
 - except:
-  - no Exceptions in pure code (no `throw`, just `Future.failed`)
+  - no Exceptions in pure code (no `throw`, just `Task.fail`)
   - ...
 
 ---
@@ -171,11 +208,10 @@ trait ZIO[R, E, O]
 | Future | Task |
 | ------ | ---- |
 | `Future.success` | `Task.succeed` |
-| `Future.failed` | `Task.raiseError`| 
+| `Future.failed` | `Task.fail`| 
+| `Future.apply` | `Task.effect` | 
+| `Future.apply` | `Task.effectTotal` | 
 | `Future.{map, flatMap}` | `Task.{map, flatMap}` | 
-| `Future.flatMap` | `Task.flatMap` |
-| `Future.apply` | `Task.effect`
-| ...
 
 ---
 
@@ -183,9 +219,9 @@ trait ZIO[R, E, O]
 
 ``` scala
 def strLen(str: String): Task[Int] = 
-    for {
-        _ <- Task.effect(println(str))
-    } yield str.length
+    Task
+      .effect(println(str))
+      .map((_: Unit) => str.length)
 ```
 
 ---
@@ -233,10 +269,10 @@ for {
 
 - value that is passed through computation
 - can be accessed at any point
-- must be provided at the start of computation
+- must be provided at some point before running the computation
 - intended for DI, but useful for other stuff
-- `Any` => computation doesn't require any specific environment ... anything will do
-- for `ZIO[A, _, _]` use `.provide(a: A)` to get `ZIO[Any, _, _]`
+- `Any` => computation doesn't require anything to run
+- `.provide(a: A)` moves `ZIO[A, _, _]` to `ZIO[Any, _, _]`
 
 ---
 
