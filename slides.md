@@ -195,9 +195,10 @@ ZIO[Any, Throwable, O]
 ```
 
 - like lazy `Future[O]`
+- or even better, like `() => Future[O]`
 - except:
   - no Exceptions in pure code (no `throw`, just `Task.fail`)
-  - ...
+  - no implicit passing of `ExecutionContext`
 
 ---
 
